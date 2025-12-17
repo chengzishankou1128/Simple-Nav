@@ -13,26 +13,48 @@
         <Navbar :darkMode="darkMode" @toggle-dark-mode="toggleDarkMode" class="mb-6"/>
         
         <div class="flex-grow">
-          <div 
-            class="grid gap-6" 
-            :class="{
-              'grid-cols-2 md:grid-cols-3': columns === 3,
-              'grid-cols-2 md:grid-cols-4': columns === 4,
-              'grid-cols-2 md:grid-cols-5': columns === 5,
-              'grid-cols-2 md:grid-cols-6': columns === 6,
-              'grid-cols-2 md:grid-cols-7': columns === 7,
-              'grid-cols-2 md:grid-cols-8': columns === 8
-            }"
-          >
-            <template v-for="(item, index) in filteredItems" :key="item.id">
-              <!-- 卡片必须放在广告条件判断之前 -->
-              <Card :item="item" />
-              <!-- 修正广告显示逻辑 -->
-              <AdBanner 
-                v-if="index === 9" 
-                class="col-span-full h-[120px] bg-blue-50 dark:bg-blue-900 mt-4"
-              />
-            </template>
+          <!-- 加载状态 -->
+          <div v-if="loading" class="flex items-center justify-center h-64">
+            <div class="text-gray-500 dark:text-gray-400">
+              <i class="fas fa-spinner fa-spin mr-2"></i>正在加载数据...
+            </div>
+          </div>
+          
+          <!-- 错误提示 -->
+          <div v-else-if="error" class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center max-w-2xl mx-auto">
+            <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-red-700 dark:text-red-300 mb-2">{{ error }}</h3>
+            <button 
+              @click="$router.push('/settings')"
+              class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors mt-4"
+            >
+              <i class="fas fa-cog mr-2"></i>前往设置页面
+            </button>
+          </div>
+          
+          <!-- 数据展示 -->
+          <div v-else>
+            <div 
+              class="grid gap-6" 
+              :class="{
+                'grid-cols-2 md:grid-cols-3': columns === 3,
+                'grid-cols-2 md:grid-cols-4': columns === 4,
+                'grid-cols-2 md:grid-cols-5': columns === 5,
+                'grid-cols-2 md:grid-cols-6': columns === 6,
+                'grid-cols-2 md:grid-cols-7': columns === 7,
+                'grid-cols-2 md:grid-cols-8': columns === 8
+              }"
+            >
+              <template v-for="(item, index) in filteredItems" :key="item.id">
+                <!-- 卡片必须放在广告条件判断之前 -->
+                <Card :item="item" />
+                <!-- 修正广告显示逻辑 -->
+                <AdBanner 
+                  v-if="index === 9" 
+                  class="col-span-full h-[120px] bg-blue-50 dark:bg-blue-900 mt-4"
+                />
+              </template>
+            </div>
           </div>
         </div>
 
@@ -74,6 +96,8 @@ export default {
       selectedCategory: null,
       darkMode: localStorage.getItem('darkMode') === 'true',
       isSidebarCollapsed: window.innerWidth < 768, // 初始化时根据屏幕宽度判断
+      loading: false,
+      error: null
     };
   },
   computed: {
@@ -85,12 +109,19 @@ export default {
   methods: {
     async loadData() {
       try {
+        this.loading = true;
+        this.error = null;
         const data = await fetchData();
         console.log('Loaded data:', data);
         this.items = data;
         this.categories = [...new Set(data.map(item => item.category))];
+        // 将分类信息存储到localStorage，供设置页使用
+        localStorage.setItem('appCategories', JSON.stringify(this.categories));
       } catch (error) {
         console.error('数据加载失败:', error);
+        this.error = error.message;
+      } finally {
+        this.loading = false;
       }
     },
     filterByCategory(category) {

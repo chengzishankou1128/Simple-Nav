@@ -85,6 +85,60 @@
               </div>
             </div>
             
+            <!-- API配置 -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h3 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-key text-purple-500 mr-2"></i>
+                数据源配置
+              </h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API密钥</label>
+                  <input 
+                    type="password"
+                    v-model="apiKey"
+                    placeholder="请输入维基云表格API密钥"
+                    class="w-full bg-gray-100 dark:bg-gray-700 rounded px-3 py-2"
+                  >
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">表格ID (datasheetId)</label>
+                  <input 
+                    type="text"
+                    v-model="datasheetId"
+                    placeholder="请输入维基云表格ID"
+                    class="w-full bg-gray-100 dark:bg-gray-700 rounded px-3 py-2"
+                  >
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">视图ID (viewId)</label>
+                  <input 
+                    type="text"
+                    v-model="viewId"
+                    placeholder="请输入表格视图ID"
+                    class="w-full bg-gray-100 dark:bg-gray-700 rounded px-3 py-2"
+                  >
+                </div>
+                <div class="flex gap-4">
+                  <button
+                    @click="saveApiConfig"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                  >
+                    保存配置
+                  </button>
+                  <button
+                    @click="resetApiConfig"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded"
+                  >
+                    重置
+                  </button>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  配置说明：登录维基云表格，在「设置」-「API」中获取API密钥；表格ID和视图ID可在表格URL中找到。
+                </p>
+              </div>
+            </div>
+            
             <!-- 布局设置 -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
               <h3 class="text-xl font-semibold mb-4 flex items-center">
@@ -102,6 +156,111 @@
                 </select>
               </div>
             </div>
+            
+            <!-- 分类图标设置 -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+              <!-- 折叠面板头部 -->
+              <div 
+                class="p-6 cursor-pointer flex justify-between items-center" 
+                @click="isIconSettingsExpanded = !isIconSettingsExpanded"
+              >
+                <h3 class="text-xl font-semibold flex items-center">
+                  <i class="fas fa-icons text-yellow-500 mr-2"></i>
+                  分类图标设置
+                </h3>
+                <i :class="`fas fa-chevron-down transition-transform duration-300 ${isIconSettingsExpanded ? 'transform rotate-180' : ''}`"></i>
+              </div>
+              
+              <!-- 折叠面板内容 -->
+              <div 
+                v-if="isIconSettingsExpanded" 
+                class="p-6 pt-0 space-y-4 border-t border-gray-200 dark:border-gray-700"
+              >
+                <div v-if="loadingCategories" class="text-center py-4 text-gray-500">
+                  <i class="fas fa-spinner fa-spin mr-2"></i>正在加载分类数据...
+                </div>
+                <div v-else-if="loadError" class="text-center py-4 text-red-500">
+                  <i class="fas fa-exclamation-circle mr-2"></i>{{ loadError }}
+                  <button 
+                    @click="loadCategories"
+                    class="ml-2 text-blue-500 hover:text-blue-700 underline"
+                  >
+                    刷新
+                  </button>
+                </div>
+                <div v-else-if="categories.length === 0" class="text-center py-4 text-gray-500">
+                  未找到分类数据
+                  <button 
+                    @click="loadCategories"
+                    class="ml-2 text-blue-500 hover:text-blue-700 underline"
+                  >
+                    刷新
+                  </button>
+                </div>
+                <div v-else>
+                  <div v-for="category in categories" :key="category" class="flex items-center gap-4">
+                    <div class="min-w-[120px]">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ category }}</label>
+                    </div>
+                    <div class="flex-1 flex items-center gap-2">
+                      <div class="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full">
+                        <i :class="categoryIcons[category] || 'fas fa-question-circle'"></i>
+                      </div>
+                      <div class="flex-1 flex items-center">
+                        <!-- 使用input支持手动输入 -->
+                        <input
+                          v-model="categoryIcons[category]"
+                          type="text"
+                          placeholder="输入完整图标类名，如：fas fa-wrench"
+                          class="flex-1 bg-gray-100 dark:bg-gray-700 rounded px-3 py-1"
+                          style="height: 36px;"
+                        >
+                        <!-- 图标选择下拉菜单 -->
+                        <div class="relative ml-2">
+                          <button 
+                            class="p-1 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center"
+                            @click="showIconDropdown[category] = !showIconDropdown[category]"
+                            style="min-width: 36px; height: 36px;"
+                          >
+                            <i class="fas fa-chevron-down"></i>
+                          </button>
+                          <!-- 图标选择面板 -->
+                          <div 
+                            v-if="showIconDropdown[category]" 
+                            class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
+                          >
+                            <div 
+                              v-for="icon in availableIcons" 
+                              :key="icon.name"
+                              class="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                              @click="categoryIcons[category] = `fas ${icon.name}`; showIconDropdown[category] = false"
+                            >
+                              <i :class="`fas ${icon.name} mr-2 text-xl`"></i>
+                              <span>{{ icon.displayName }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-4">
+                  <button
+                    @click="saveCategoryIcons"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+                    :disabled="loadingCategories"
+                  >
+                    保存图标配置
+                  </button>
+                  <button
+                    @click="resetCategoryIcons"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded"
+                  >
+                    重置默认图标
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -115,6 +274,7 @@
 <script>
 // 移除Navbar导入
 import Footer from '../components/Footer.vue'
+import { fetchData } from '../api/fetchData'
 
 export default {
   components: { Footer }, // 移除Navbar组件
@@ -125,7 +285,40 @@ export default {
       darkMode: localStorage.getItem('darkMode') === 'true',
       backgroundColors: ['#ffffff', '#f3f4f6', '#fef3c7', '#f0fdf4', '#f1f5f9', '#bfc9df'],
       selectedBg: localStorage.getItem('background') || '#ffffff',
-      columns: localStorage.getItem('columns') || 5
+      columns: localStorage.getItem('columns') || 5,
+      // API配置相关变量
+      apiKey: localStorage.getItem('apiKey') || '',
+      datasheetId: localStorage.getItem('datasheetId') || '',
+      viewId: localStorage.getItem('viewId') || '',
+      // 分类图标相关变量
+      categories: [], // 初始为空，不要默认分类
+      loadingCategories: false,
+      categoryIcons: {}, // 初始为空，通过loadCategoryIcons加载
+      loadError: null, // 加载错误提示
+      availableIcons: [
+        { name: 'fa-wrench', displayName: '工具' },
+        { name: 'fa-blog', displayName: '博客' },
+        { name: 'fa-film', displayName: '影视' },
+        { name: 'fa-fire', displayName: '火焰' },
+        { name: 'fa-cloud', displayName: '云朵' },
+        { name: 'fa-image', displayName: '图片' },
+        { name: 'fa-palette', displayName: '调色板' },
+        { name: 'fa-building', displayName: '建筑' },
+        { name: 'fa-video', displayName: '视频' },
+        { name: 'fa-key', displayName: '钥匙' },
+        { name: 'fa-cloud-upload-alt', displayName: '上传' },
+        { name: 'fa-wifi', displayName: 'WiFi' },
+        { name: 'fa-cogs', displayName: '齿轮' },
+        { name: 'fa-globe', displayName: '地球' },
+        { name: 'fa-book', displayName: '书籍' },
+        { name: 'fa-music', displayName: '音乐' },
+        { name: 'fa-gamepad', displayName: '游戏手柄' },
+        { name: 'fa-shopping-cart', displayName: '购物车' },
+        { name: 'fa-question-circle', displayName: '问号' }
+      ],
+      isIconSettingsExpanded: false,
+      // 为每个分类创建独立的下拉状态
+      showIconDropdown: {}
     }
   },
   // 移除与侧边栏相关的所有方法和props
@@ -140,6 +333,92 @@ export default {
       } else if (savedImage) {
         this.applyBackgroundImage()
       }
+      
+      // 加载分类数据和图标配置
+      this.loadCategories()
+    },
+    
+    // 加载分类数据
+    loadCategories() {
+      this.loadingCategories = true;
+      this.loadError = null;
+      try {
+        // 直接从localStorage获取分类信息（由App.vue存储）
+        console.log('从localStorage获取分类信息...');
+        const savedCategories = localStorage.getItem('appCategories');
+        if (savedCategories) {
+          const categories = JSON.parse(savedCategories);
+          if (categories.length > 0) {
+            console.log('获取分类成功:', categories);
+            this.categories = categories;
+            this.loadCategoryIcons();
+            return;
+          }
+        }
+        
+        // 获取失败，显示为空并提示
+        console.log('获取分类失败，显示为空');
+        this.categories = [];
+        this.loadError = '无法获取分类信息，请先访问首页或刷新页面';
+      } catch (error) {
+        console.error('加载分类失败:', error);
+        this.categories = [];
+        this.loadError = '无法获取分类信息，请先访问首页或刷新页面';
+      } finally {
+        this.loadingCategories = false;
+      }
+    },
+    
+    // 加载分类图标配置
+    loadCategoryIcons() {
+      // 先从localStorage获取已保存的图标配置
+      const savedIcons = localStorage.getItem('categoryIcons')
+      const savedIconsObj = savedIcons ? JSON.parse(savedIcons) : {};
+      
+      // 为当前所有分类分配图标
+      const newCategoryIcons = {};
+      
+      // 遍历当前分类列表（可能是从API获取的）
+      this.categories.forEach(category => {
+        // 如果有已保存的图标配置，使用它；否则使用默认图标
+        if (savedIconsObj[category]) {
+          newCategoryIcons[category] = savedIconsObj[category];
+        } else {
+          // 为新分类分配默认图标
+          newCategoryIcons[category] = 'fas fa-question-circle';
+        }
+      });
+      
+      // 更新图标配置
+      this.categoryIcons = newCategoryIcons;
+    },
+    
+    // 保存分类图标配置
+    saveCategoryIcons() {
+      localStorage.setItem('categoryIcons', JSON.stringify(this.categoryIcons))
+      alert('分类图标配置已保存')
+    },
+    
+    // 重置分类图标为默认值
+    resetCategoryIcons() {
+      this.categoryIcons = {
+        '在线工具': 'fas fa-wrench',
+        '个人博客': 'fas fa-blog',
+        '影视在线': 'fas fa-film',
+        'AI大模型': 'fas fa-fire',
+        '网络存储': 'fas fa-cloud',
+        '素材网站': 'fas fa-image',
+        '灵感图库': 'fas fa-palette',
+        '建筑网站': 'fas fa-building',
+        'AI音视频': 'fas fa-video',
+        'AI绘画': 'fas fa-palette',
+        '破解资源': 'fas fa-key',
+        '云上平台': 'fas fa-cloud-upload-alt',
+        '网站相关': 'fas fa-wifi',
+        '杂项工具': 'fas fa-cogs'
+      }
+      localStorage.setItem('categoryIcons', JSON.stringify(this.categoryIcons))
+      alert('分类图标已重置为默认值')
     },
     applyCustomColor() {
       const colorRegex = /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
@@ -190,12 +469,32 @@ export default {
     saveSettings() {
       localStorage.setItem('columns', this.columns)
     },
-    toggleSidebar() {
-      // 只在桌面端允许手动切换
-      if (window.innerWidth >= 768) {
-        this.isSidebarCollapsed = !this.isSidebarCollapsed
+    // 保存API配置
+    saveApiConfig() {
+      if (!this.apiKey.trim() || !this.datasheetId.trim() || !this.viewId.trim()) {
+        alert('请填写完整的API配置信息');
+        return;
       }
-    }
+      
+      localStorage.setItem('apiKey', this.apiKey);
+      localStorage.setItem('datasheetId', this.datasheetId);
+      localStorage.setItem('viewId', this.viewId);
+      
+      alert('API配置已保存，页面将刷新以应用新配置');
+      window.location.reload();
+    },
+    // 重置API配置
+    resetApiConfig() {
+      this.apiKey = '';
+      this.datasheetId = '';
+      this.viewId = '';
+      
+      localStorage.removeItem('apiKey');
+      localStorage.removeItem('datasheetId');
+      localStorage.removeItem('viewId');
+      
+      alert('API配置已重置');
+    },
   }
 }
 </script>

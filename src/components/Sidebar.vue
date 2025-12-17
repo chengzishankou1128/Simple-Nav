@@ -102,24 +102,12 @@ export default {
       this.$emit('select-category', category);
     },
     getCategoryIcon(category) {
-      const iconMap = {
-        '在线工具': 'fa-solid fa-wrench',
-        '个人博客': 'fa-solid fa-blog',
-        '影视在线': 'fa-solid fa-film',
-        'AI大模型': 'fa-solid fa-fire',
-        '网络存储': 'fa-solid fa-cloud',
-        '素材网站': 'fa-solid fa-image',
-        '灵感图库': 'fa-solid fa-palette',
-        '建筑网站': 'fa-solid fa-building',
-        'AI音视频': 'fa-solid fa-video',
-        'AI绘画': 'fa-solid fa-palette',
-        '破解资源': 'fa-solid fa-key',
-        '云上平台': 'fa-solid fa-cloud-upload-alt',
-        '网站相关': 'fa-solid fa-wifi',
-        '杂项工具': 'fa-solid fa-cogs',
-        // 添加更多分类图标映射
-      };
-      return iconMap[category] || 'fa-question-circle';
+      // 从localStorage读取图标映射
+      const savedIcons = localStorage.getItem('categoryIcons');
+      const iconMap = savedIcons ? JSON.parse(savedIcons) : {};
+      
+      // 如果有配置的图标，直接返回完整图标类名，否则返回默认图标
+      return iconMap[category] || 'fas fa-question-circle';
     },
     resetCategory() {
       this.$emit('select-category', null); // 发送null表示重置分类

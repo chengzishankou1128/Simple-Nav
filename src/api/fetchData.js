@@ -1,13 +1,22 @@
-const apiKey = 'usk0qkAYMWjQG2AQDZUY3DG';
-const datasheetId = 'dstfGaY66aN2wyLlmX';
 const baseUrl = 'https://api.vika.cn/fusion/v1/datasheets';
-const viewId = 'viwullRf3ubdS';
 const fieldKey = 'name';
-const apiUrl = `${baseUrl}/${datasheetId}/records?viewId=${viewId}&fieldKey=${fieldKey}&pageSize=1000`;
 const DEFAULT_ICON_URL = '/default.ico';
 
 export async function fetchData() {
   try {
+    // 从localStorage读取API配置
+    const apiKey = localStorage.getItem('apiKey');
+    const datasheetId = localStorage.getItem('datasheetId');
+    const viewId = localStorage.getItem('viewId');
+    
+    // 检查配置是否完整
+    if (!apiKey || !datasheetId || !viewId) {
+      throw new Error('API配置不完整，请前往设置页面配置');
+    }
+    
+    // 动态构建API URL
+    const apiUrl = `${baseUrl}/${datasheetId}/records?viewId=${viewId}&fieldKey=${fieldKey}&pageSize=1000`;
+    
     const response = await fetch(apiUrl, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
@@ -49,6 +58,7 @@ export async function fetchData() {
       stack: error.stack,
       timestamp: new Date().toISOString()
     });
-    return [];
+    // 抛出错误，让调用方处理
+    throw error;
   }
 }

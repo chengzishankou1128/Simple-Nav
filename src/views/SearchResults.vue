@@ -13,9 +13,27 @@
         
         <div class="flex-grow">
           <h2 class="text-2xl mb-4 dark:text-gray-200">搜索：{{ searchQuery }}</h2>
-          <div v-if="loading" class="text-gray-500 dark:text-gray-400">
-            正在加载数据...
+          
+          <!-- 加载状态 -->
+          <div v-if="loading" class="flex items-center justify-center h-64">
+            <div class="text-gray-500 dark:text-gray-400">
+              <i class="fas fa-spinner fa-spin mr-2"></i>正在加载数据...
+            </div>
           </div>
+          
+          <!-- 错误提示 -->
+          <div v-else-if="error" class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center max-w-2xl mx-auto">
+            <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-red-700 dark:text-red-300 mb-2">{{ error }}</h3>
+            <button 
+              @click="$router.push('/settings')"
+              class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors mt-4"
+            >
+              <i class="fas fa-cog mr-2"></i>前往设置页面
+            </button>
+          </div>
+          
+          <!-- 搜索结果 -->
           <div v-else>
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               <Card 
@@ -53,7 +71,8 @@ export default {
       darkMode: localStorage.getItem('darkMode') === 'true',
       isSidebarCollapsed: window.innerWidth < 768,
       // 新增 categories 属性
-      categories: []
+      categories: [],
+      error: null
     }
   },
   computed: {
@@ -77,6 +96,7 @@ export default {
     async handleSearch(query) {
       this.loading = true;
       this.searchQuery = query || '';
+      this.error = null;
       
       try {
         this.allItems = await fetchData();
@@ -89,6 +109,7 @@ export default {
         });
       } catch (error) {
         console.error('搜索失败:', error);
+        this.error = error.message;
       } finally {
         this.loading = false;
       }
