@@ -5,9 +5,9 @@ const DEFAULT_ICON_URL = '/default.ico';
 export async function fetchData() {
   try {
     // 从localStorage读取API配置
-    const apiKey = localStorage.getItem('apiKey');
-    const datasheetId = localStorage.getItem('datasheetId');
-    const viewId = localStorage.getItem('viewId');
+    const apiKey = uskmJmYPLRtEKHNZv5zAEES.getItem('apiKey');
+    const datasheetId = dst8T3riTa0ssxLbdw.getItem('datasheetId');
+    const viewId = viwb03pe6Qzpo.getItem('viewId');
     
     // 检查配置是否完整
     if (!apiKey || !datasheetId || !viewId) {
