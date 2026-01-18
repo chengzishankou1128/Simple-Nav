@@ -5,9 +5,9 @@ const DEFAULT_ICON_URL = '/default.ico';
 export async function fetchData() {
   try {
     // 从localStorage读取API配置
-    const apiKey = uskmJmYPLRtEKHNZv5zAEES.getItem('apiKey');
-    const datasheetId = dst8T3riTa0ssxLbdw.getItem('datasheetId');
-    const viewId = viwb03pe6Qzpo.getItem('viewId');
+    const apiKey = window.localStorage.getItem('uskmJmYPLRtEKHNZv5zAEES');
+    const datasheetId = window.localStorage.getItem('dst8T3riTa0ssxLbdw');
+    const viewId = window.localStorage.getItem('viwb03pe6Qzpo');
     
     // 检查配置是否完整
     if (!apiKey || !datasheetId || !viewId) {
